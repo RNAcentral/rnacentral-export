@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - .:/app
+      - results:/srv/results
+      - logs:/srv/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    command: celery -A app.celery.celery_app worker --loglevel=info --logfile=/srv/logs/export.log
+    volumes:
+      - .:/app
+      - results:/srv/results
+      - logs:/srv/logs
+    depends_on:
+      - redis
+
+volumes:
+  results:
+  logs:
