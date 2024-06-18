@@ -1,6 +1,6 @@
 import os
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -9,7 +9,7 @@ from .tasks import fetch_data_from_search_index
 
 
 class APIRequest(BaseModel):
-    api_url: str = Field(..., example="https://wwwdev.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(so_rna_type_name:NcRNA)&fields=description&size=1000&format=json")
+    api_url: str = Field(..., example="https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(so_rna_type_name:ScaRNA)&size=500&sort=id&format=json&searchposition=0")
 
 
 app = FastAPI(docs_url="/")
