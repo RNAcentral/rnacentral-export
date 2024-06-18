@@ -18,6 +18,10 @@ sqlalchemy = "^2.0.30"
 psycopg2-binary = "^2.9.9"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+pytest-mock = "^3.14.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
