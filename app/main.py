@@ -9,7 +9,7 @@ from .tasks import fetch_data_from_search_index
 
 
 class APIRequest(BaseModel):
-    api_url: str = Field(..., example="https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(so_rna_type_name:ScaRNA)&size=500&sort=id&format=json&searchposition=0")
+    api_url: str = Field(..., example="https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(TAXONOMY:9606)&size=500&sort=id&format=json")
 
 
 app = FastAPI(docs_url="/")
@@ -40,7 +40,8 @@ def download_file(task_id: str):
             return FileResponse(
                 path=file_path,
                 filename=f"{task_id}.json",
-                media_type="application/json"
+                media_type="application/octet-stream",
+                headers={"Content-Disposition": f"attachment; filename={task_id}.json"}
             )
         else:
             logger.error(f"Results file could not be found: {task_id}")
