@@ -10,15 +10,21 @@ RUN apt-get update \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
+# ARG for dev dependencies
+ARG DEV=false
+
 # install poetry
 RUN python -m pip install --no-cache-dir --upgrade poetry==1.8.2
 
 # copy dependencies
 COPY poetry.lock pyproject.toml ./
 
-# create a requirements file
-RUN poetry export -f requirements.txt --without-hashes -o /tmp/requirements.txt
-
+# create a requirements file conditionally including dev dependencies
+RUN if [ "$DEV" = "true" ]; then \
+        poetry export -f requirements.txt --without-hashes --with dev -o /tmp/requirements.txt; \
+    else \
+        poetry export -f requirements.txt --without-hashes -o /tmp/requirements.txt; \
+    fi
 
 # create rnacentral-export image
 FROM python:3.11-slim-bullseye as rnacentral-export
