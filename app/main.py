@@ -1,7 +1,7 @@
 import os
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from .logger import logger
@@ -33,6 +33,15 @@ def download_file(task_id: str):
         # status to SUBMITTED
         logger.info(f"Task ID not found: {task_id}")
         raise HTTPException(status_code=404, detail="Task ID not found")
+    elif result.state == "PROGRESS":
+        progress = result.info.get("progress", 0)
+        return JSONResponse(
+            content={
+                "task_id": task_id,
+                "state": result.state,
+                "progress": progress
+            }
+        )
     elif result.state == "SUCCESS":
         file_path = f"/srv/results/{task_id}.json.gz"
         if os.path.exists(file_path):
