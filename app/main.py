@@ -41,7 +41,7 @@ def download_file(task_id: str):
                 path=file_path,
                 filename=f"{task_id}.json.gz",
                 media_type="application/gzip",
-                headers={"Content-Disposition": "attachment"}
+                headers={"Content-Disposition": f"attachment; filename={task_id}.json.gz"}
             )
         else:
             logger.error(f"Results file could not be found: {task_id}")
