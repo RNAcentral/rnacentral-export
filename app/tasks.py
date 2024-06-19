@@ -2,8 +2,6 @@ import gzip
 import json
 import os
 import requests
-import shutil
-
 from pydantic import BaseModel
 
 from .celery import celery_app
@@ -36,27 +34,19 @@ def fetch_data_from_search_index(self, api_url: str):
         else:
             raise Exception("Failed to fetch data")
 
-    # fetch data from database in batches
+    # fetch data from database in batches and write to a compressed file
     batch_size = 1000
-    db_data = []
-    for i in range(0, len(ids), batch_size):
-        batch_ids = ids[i:i + batch_size]
-        batch_data = fetch_data_from_db(batch_ids)
-        db_data.extend(batch_data)
-
-    # save the data to a file
-    file_path = f"/srv/results/{self.request.id}.json"
+    file_path = f"/srv/results/{self.request.id}.json.gz"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, "w") as file:
-        json.dump(db_data, file, default=str)
 
-    # compress the JSON file
-    compressed_file_path = file_path + ".gz"
-    with open(file_path, "rb") as f_in:
-        with gzip.open(compressed_file_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with gzip.open(file_path, "wt", encoding="utf-8") as gz_file:
+        first = True
+        for i in range(0, len(ids), batch_size):
+            batch_ids = ids[i:i + batch_size]
+            batch_data = fetch_data_from_db(batch_ids)
+            if not first:
+                gz_file.write(", ")  # add comma between JSON objects
+            first = False
+            json.dump(batch_data, gz_file, default=str)
 
-    # remove the original uncompressed file
-    os.remove(file_path)
-
-    return compressed_file_path
+    return file_path
