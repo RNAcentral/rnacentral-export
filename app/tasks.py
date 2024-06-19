@@ -1,6 +1,8 @@
+import gzip
 import json
 import os
 import requests
+import shutil
 
 from pydantic import BaseModel
 
@@ -48,4 +50,13 @@ def fetch_data_from_search_index(self, api_url: str):
     with open(file_path, "w") as file:
         json.dump(db_data, file, default=str)
 
-    return file_path
+    # compress the JSON file
+    compressed_file_path = file_path + ".gz"
+    with open(file_path, "rb") as f_in:
+        with gzip.open(compressed_file_path, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    # remove the original uncompressed file
+    os.remove(file_path)
+
+    return compressed_file_path

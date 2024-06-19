@@ -34,14 +34,14 @@ def download_file(task_id: str):
         logger.info(f"Task ID not found: {task_id}")
         raise HTTPException(status_code=404, detail="Task ID not found")
     elif result.state == "SUCCESS":
-        file_path = f"/srv/results/{task_id}.json"
+        file_path = f"/srv/results/{task_id}.json.gz"
         if os.path.exists(file_path):
             logger.info(f"Showing results for Task ID: {task_id}")
             return FileResponse(
                 path=file_path,
-                filename=f"{task_id}.json",
-                media_type="application/octet-stream",
-                headers={"Content-Disposition": f"attachment; filename={task_id}.json"}
+                filename=f"{task_id}.json.gz",
+                media_type="application/gzip",
+                headers={"Content-Disposition": "attachment"}
             )
         else:
             logger.error(f"Results file could not be found: {task_id}")
