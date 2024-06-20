@@ -19,15 +19,27 @@ def fetch_data_from_search_index(self, api_url: str):
     self.update_state(state="SUBMITTED")  # set a custom initial state
     search_position = "0"  # initial search position
     ids = []
+    hit_count = None
+    ids_extracted = 0
 
     while True:
         response = requests.get(api_url + f"&searchposition={search_position}")
         if response.status_code == 200:
             data = response.json()
+            if not hit_count:
+                hit_count = data.get("hitCount")
+
             entries = data.get("entries", [])
             if not entries:
                 break  # there is no more data to fetch
+
             ids.extend(entry["id"] for entry in entries)
+            ids_extracted += len(entries)
+            progress_ids = int((ids_extracted / hit_count) * 100)
+            self.update_state(
+                state="PROGRESS",
+                meta={"progress_ids": progress_ids, "progress_db_data": 0}
+            )
             search_position = data.get("searchPosition")  # next position
             if not search_position:
                 break
@@ -49,7 +61,10 @@ def fetch_data_from_search_index(self, api_url: str):
                 gz_file.write(", ")  # add comma between JSON objects
             first = False
             gz_file.write(json.dumps(batch_data, default=str))
-            progress = int((i + batch_size) / total_ids * 100)
-            self.update_state(state="PROGRESS", meta={"progress": progress})
+            progress_db_data = int((i + batch_size) / total_ids * 100)
+            self.update_state(
+                state="PROGRESS",
+                meta={"progress_ids": 100, "progress_db_data": progress_db_data}
+            )
 
     return file_path
