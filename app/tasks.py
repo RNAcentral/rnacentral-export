@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from .celery import celery_app
 from .database import fetch_data_from_db
+from .logger import logger
 
 
 class APIData(BaseModel):
@@ -46,6 +47,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 break
         else:
             raise Exception("Failed to fetch data")
+
+    # check for duplicate IDs
+    if len(ids) != len(set(ids)):
+        ids = list(set(ids))
+        logger.info(f"There are duplicate IDs at this URL: {api_url}")
 
     if data_type == "ids":
         # save IDs to a compressed file
