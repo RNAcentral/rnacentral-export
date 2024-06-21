@@ -1,22 +1,41 @@
-from sqlalchemy import create_engine, func, select, Table, MetaData
-from sqlalchemy.orm import sessionmaker
+from typing import List, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
+from sqlalchemy.future import select
+from sqlalchemy import func, MetaData, Table
 
 from .config import settings
 
-
-# initialize the database connection
-engine = create_engine(settings.database)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-metadata = MetaData()
-
-# fetch data from following tables
-precomputed = Table("rnc_rna_precomputed", metadata, autoload_with=engine)
-rna = Table("rna", metadata, autoload_with=engine)
-r2dt_results = Table("r2dt_results", metadata, autoload_with=engine)
+# asynchronous database connection
+engine: AsyncEngine = create_async_engine(
+    settings.database,
+    echo=True,
+    future=True
+)
+metadata: MetaData = MetaData()
 
 
-def fetch_data_from_db(ids):
-    with (SessionLocal() as session):
+async def load_tables(conn: AsyncConnection) -> tuple[Table, Table, Table]:
+    precomputed: Table = await conn.run_sync(
+        lambda sync_conn: Table(
+            "rnc_rna_precomputed",
+            metadata,
+            autoload_with=sync_conn)
+    )
+    rna: Table = await conn.run_sync(
+        lambda sync_conn: Table("rna", metadata, autoload_with=sync_conn)
+    )
+    r2dt_results: Table = await conn.run_sync(
+        lambda sync_conn: Table(
+            "r2dt_results",
+            metadata,
+            autoload_with=sync_conn)
+    )
+    return precomputed, rna, r2dt_results
+
+
+async def fetch_data_from_db(ids: List[str]) -> List[Dict[str, Any]]:
+    async with engine.connect() as conn:
+        precomputed, rna, r2dt_results = await load_tables(conn)
         stmt = (
             select(
                 precomputed.c.id,
@@ -32,7 +51,8 @@ def fetch_data_from_db(ids):
             .join(r2dt_results, r2dt_results.c.urs == precomputed.c.upi)
             .where(precomputed.c.id.in_(ids))
         )
-        results = session.execute(stmt).fetchall()
+        results = await conn.execute(stmt)
+        rows = results.fetchall()
         column_names = [
             "rnacentral_id",
             "taxid",
@@ -43,6 +63,6 @@ def fetch_data_from_db(ids):
             "secondary_structure",
             "sequence"
         ]
-        precomputed_data = [dict(zip(column_names, row)) for row in results]
+        precomputed_data = [dict(zip(column_names, row)) for row in rows]
 
     return precomputed_data

@@ -1,3 +1,4 @@
+import asyncio
 import gzip
 import json
 import os
@@ -61,22 +62,24 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         total_ids = len(ids)
 
-        with gzip.open(file_path, "wt", encoding="utf-8") as gz_file:
-            first = True
-            for i in range(0, total_ids, batch_size):
-                batch_ids = ids[i:i + batch_size]
-                batch_data = fetch_data_from_db(batch_ids)
-                if not first:
-                    gz_file.write(", ")  # add comma between JSON objects
-                first = False
-                gz_file.write(json.dumps(batch_data, default=str))
-                progress_db_data = int((i + batch_size) / total_ids * 100)
-                self.update_state(
-                    state="PROGRESS",
-                    meta={
-                        "progress_ids": 100,
-                        "progress_db_data": progress_db_data
-                    }
-                )
+        async def fetch_and_write():
+            with gzip.open(file_path, "wt", encoding="utf-8") as gz_file:
+                first = True
+                for i in range(0, total_ids, batch_size):
+                    batch_ids = ids[i:i + batch_size]
+                    batch_data = await fetch_data_from_db(batch_ids)
+                    if not first:
+                        gz_file.write(", ")  # add comma between JSON objects
+                    first = False
+                    gz_file.write(json.dumps(batch_data, default=str))
+                    progress_db_data = int((i + batch_size) / total_ids * 100)
+                    self.update_state(
+                        state="PROGRESS",
+                        meta={
+                            "progress_ids": 100,
+                            "progress_db_data": progress_db_data
+                        }
+                    )
+        asyncio.run(fetch_and_write())
 
         return file_path
