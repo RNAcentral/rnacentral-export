@@ -6,11 +6,7 @@ from sqlalchemy import func, MetaData, Table
 from .config import settings
 
 # asynchronous database connection
-engine: AsyncEngine = create_async_engine(
-    settings.database,
-    echo=True,
-    future=True
-)
+engine: AsyncEngine = create_async_engine(settings.database, future=True)
 metadata: MetaData = MetaData()
 
 
