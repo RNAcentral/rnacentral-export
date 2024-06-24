@@ -30,14 +30,19 @@ def fetch_data(request: APIRequest):
     return {"task_id": task.id, "data_type": request.data_type}
 
 
-@app.get("/download/{task_id}/json")
-def download_json(task_id: str):
-    return download_file(task_id, "json")
+@app.get("/download/{task_id}/fasta")
+def download_fasta(task_id: str):
+    return download_file(task_id, "fasta")
 
 
 @app.get("/download/{task_id}/ids")
 def download_ids(task_id: str):
     return download_file(task_id, "ids")
+
+
+@app.get("/download/{task_id}/json")
+def download_json(task_id: str):
+    return download_file(task_id, "json")
 
 
 def download_file(task_id: str, data_type: str):
@@ -60,7 +65,12 @@ def download_file(task_id: str, data_type: str):
         return JSONResponse(content=content)
 
     elif result.state == "SUCCESS":
-        file_extension = "json.gz" if data_type == "json" else "txt.gz"
+        if data_type == "json":
+            file_extension = "json.gz"
+        elif data_type == "fasta":
+            file_extension = "fasta.gz"
+        else:
+            file_extension = "txt.gz"
         file_path = f"/srv/results/{task_id}.{file_extension}"
         if os.path.exists(file_path):
             logger.info(f"Showing results for Task ID: {task_id}")
