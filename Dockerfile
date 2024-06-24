@@ -32,10 +32,40 @@ FROM python:3.11-slim-bullseye as rnacentral-export
 ENV \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    HOME="/srv/rnacentral-export"
+    HOME="/srv/rnacentral-export" \
+    LOCAL="/srv/local"
+
+# build dependencies
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        g++ \
+        build-essential \
+        curl \
+        tar \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # create folders
-RUN mkdir -p $HOME && mkdir /srv/results && mkdir /srv/logs
+RUN \
+    mkdir $HOME && \
+    mkdir $LOCAL && \
+    mkdir /srv/results && \
+    mkdir /srv/logs
+
+# install Infernal
+RUN \
+    cd $LOCAL && \
+    curl -OL http://eddylab.org/infernal/infernal-1.1.5-macosx-silicon.tar.gz && \
+    tar -xvzf infernal-1.1.5-macosx-silicon.tar.gz && \
+    cd infernal-1.1.5-macosx-silicon && \
+    ./configure --prefix=$LOCAL/infernal-1.1.5 && \
+    make && \
+    make install && \
+    cd easel && \
+    make install && \
+    cd $LOCAL && \
+    rm infernal-1.1.5-macosx-silicon.tar.gz
 
 # create user
 RUN useradd -m -d $HOME -s /bin/bash rnacentral
