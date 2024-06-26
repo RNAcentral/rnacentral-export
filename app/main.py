@@ -2,7 +2,7 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field, field_validator, TypeAdapter
 from typing import Literal
 
 from .logger import logger
@@ -12,6 +12,11 @@ from .tasks import fetch_data_from_search_index
 class APIRequest(BaseModel):
     api_url: str = Field(..., example="https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(TAXONOMY:9606)&size=500&sort=id&format=json")
     data_type: Literal["fasta", "ids", "json"]
+
+    @field_validator("api_url")
+    def validate_api_url(cls, url):
+        TypeAdapter(AnyHttpUrl).validate_python(url)
+        return url
 
 
 app = FastAPI(docs_url="/")
