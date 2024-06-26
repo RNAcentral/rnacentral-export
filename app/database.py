@@ -3,9 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_en
 from sqlalchemy.future import select
 from sqlalchemy import func, MetaData, Table
 
-from .config import settings
+from .config import get_settings
 
 # asynchronous database connection
+settings = get_settings()
 engine: AsyncEngine = create_async_engine(settings.database, future=True)
 metadata: MetaData = MetaData()
 

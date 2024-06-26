@@ -8,7 +8,7 @@ import subprocess as sub
 from pydantic import BaseModel
 
 from .celery import celery_app
-from .config import settings
+from .config import get_settings
 from .database import fetch_data_from_db
 from .logger import logger
 
@@ -21,6 +21,7 @@ class APIData(BaseModel):
 
 @celery_app.task(bind=True)
 def fetch_data_from_search_index(self, api_url: str, data_type: str):
+    settings = get_settings()
     self.update_state(state="SUBMITTED")  # set a custom initial state
     search_position = "0"  # initial search position
     ids = []
