@@ -4,6 +4,7 @@ import json
 import os
 import requests
 import subprocess as sub
+import threading
 
 from pydantic import BaseModel
 
@@ -111,14 +112,12 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                         }
                     )
 
-        # create a new event loop for this task
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(fetch_and_write())
-        finally:
-            asyncio.set_event_loop(None)
-            loop.close()
+        def run_asyncio_task():
+            asyncio.run(fetch_and_write())
+
+        thread = threading.Thread(target=run_asyncio_task)
+        thread.start()
+        thread.join()
 
         return file_path
 
