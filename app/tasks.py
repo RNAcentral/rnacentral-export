@@ -117,6 +117,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         try:
             loop.run_until_complete(fetch_and_write())
         finally:
+            asyncio.set_event_loop(None)
             loop.close()
 
         return file_path
