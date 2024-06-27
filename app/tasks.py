@@ -112,10 +112,12 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                     )
 
         # create a new event loop for this task
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
-        new_loop.run_until_complete(fetch_and_write())
-        new_loop.close()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(fetch_and_write())
+        finally:
+            loop.close()
 
         return file_path
 
