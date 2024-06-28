@@ -1,65 +1,69 @@
 from typing import List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
-from sqlalchemy.future import select
-from sqlalchemy import func, MetaData, Table
+from sqlalchemy import create_engine, func, MetaData, Table, select
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from .config import get_settings
+from .logger import logger
 
-# asynchronous database connection
+# synchronous database connection
 settings = get_settings()
-engine: AsyncEngine = create_async_engine(settings.database, future=True)
+engine: Engine = create_engine(settings.database)
 metadata: MetaData = MetaData()
 
 
-async def load_tables(conn: AsyncConnection) -> tuple[Table, Table, Table]:
-    precomputed: Table = await conn.run_sync(
-        lambda sync_conn: Table(
-            "rnc_rna_precomputed",
-            metadata,
-            autoload_with=sync_conn)
-    )
-    rna: Table = await conn.run_sync(
-        lambda sync_conn: Table("rna", metadata, autoload_with=sync_conn)
-    )
-    r2dt_results: Table = await conn.run_sync(
-        lambda sync_conn: Table(
-            "r2dt_results",
-            metadata,
-            autoload_with=sync_conn)
-    )
-    return precomputed, rna, r2dt_results
-
-
-async def fetch_data_from_db(ids: List[str]) -> List[Dict[str, Any]]:
-    async with engine.connect() as conn:
-        precomputed, rna, r2dt_results = await load_tables(conn)
-        stmt = (
-            select(
-                precomputed.c.id,
-                precomputed.c.taxid,
-                precomputed.c.description,
-                precomputed.c.rna_type,
-                precomputed.c.so_rna_type,
-                precomputed.c.databases,
-                r2dt_results.c.secondary_structure,
-                func.coalesce(rna.c.seq_short, rna.c.seq_long).label("sequence")
+def fetch_data_from_db(ids: List[str]) -> List[Dict[str, Any]]:
+    try:
+        with Session(engine) as session:
+            precomputed: Table = Table(
+                "rnc_rna_precomputed",
+                metadata,
+                autoload_with=session.bind
             )
-            .join(rna, rna.c.upi == precomputed.c.upi)
-            .join(r2dt_results, r2dt_results.c.urs == precomputed.c.upi)
-            .where(precomputed.c.id.in_(ids))
-        )
-        results = await conn.execute(stmt)
-        rows = results.fetchall()
-        column_names = [
-            "rnacentral_id",
-            "taxid",
-            "description",
-            "rna_type",
-            "so_rna_type",
-            "databases",
-            "secondary_structure",
-            "sequence"
-        ]
-        precomputed_data = [dict(zip(column_names, row)) for row in rows]
+            rna: Table = Table(
+                "rna",
+                metadata,
+                autoload_with=session.bind
+            )
+            r2dt_results: Table = Table(
+                "r2dt_results",
+                metadata,
+                autoload_with=session.bind
+            )
+
+            stmt = (
+                select(
+                    precomputed.c.id,
+                    precomputed.c.taxid,
+                    precomputed.c.description,
+                    precomputed.c.rna_type,
+                    precomputed.c.so_rna_type,
+                    precomputed.c.databases,
+                    r2dt_results.c.secondary_structure,
+                    func.coalesce(rna.c.seq_short, rna.c.seq_long).label("sequence")
+                )
+                .join(rna, rna.c.upi == precomputed.c.upi)
+                .join(r2dt_results, r2dt_results.c.urs == precomputed.c.upi)
+                .where(precomputed.c.id.in_(ids))
+            )
+            results = session.execute(stmt).fetchall()
+            column_names = [
+                "rnacentral_id",
+                "taxid",
+                "description",
+                "rna_type",
+                "so_rna_type",
+                "databases",
+                "secondary_structure",
+                "sequence"
+            ]
+            precomputed_data = [dict(zip(column_names, row)) for row in results]
+    except SQLAlchemyError as e:
+        logger.error(f"Database error: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise
 
     return precomputed_data
