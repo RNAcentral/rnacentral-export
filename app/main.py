@@ -67,6 +67,8 @@ def download_file(task_id: str, data_type: str):
         }
         if data_type == "json":
             content["progress_db_data"] = result.info.get("progress_db_data", 0)
+        elif data_type == "fasta":
+            content["progress_fasta"] = result.info.get("progress_fasta", 0)
         return JSONResponse(content=content)
 
     elif result.state == "SUCCESS":
