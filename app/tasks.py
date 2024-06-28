@@ -80,6 +80,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         with gzip.open(ids_file_path, "wt", encoding="utf-8") as gz_file:
             gz_file.write("\n".join(ids))
         self.update_state(state="PROGRESS", meta={"progress_ids": 100})
+        logger.info(f"Data export finished for: {self.request.id}")
         return {"ids_file_path": ids_file_path}
 
     elif data_type == "json":
@@ -119,6 +120,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         thread.start()
         thread.join()
 
+        logger.info(f"Data export finished for: {self.request.id}")
         return file_path
 
     if data_type == "fasta":
@@ -167,4 +169,5 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             raise
 
         os.remove(temp_ids_file)
+        logger.info(f"Data export finished for: {self.request.id}")
         return {"fasta_file": fasta_file_path}
