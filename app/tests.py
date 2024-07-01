@@ -149,7 +149,7 @@ def test_download_file_processing(mocker):
 
 
 def test_download_file_progress(mocker):
-    mock_result = Mock(state="PROGRESS")
+    mock_result = Mock(state="RUNNING")
     mock_result.info = {"progress_ids": 50, "progress_db_data": 0}
     mocker.patch.object(
         fetch_data_from_search_index,
@@ -160,7 +160,7 @@ def test_download_file_progress(mocker):
     assert response.status_code == 200
     assert response.json() == {
         "task_id": "mock-task-id",
-        "state": "PROGRESS",
+        "state": "RUNNING",
         "progress_ids": 50,
         "progress_db_data": 0
     }

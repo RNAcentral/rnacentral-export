@@ -58,7 +58,7 @@ def download_file(task_id: str, data_type: str):
         logger.info(f"Task ID not found: {task_id}")
         raise HTTPException(status_code=404, detail="Task ID not found")
 
-    elif result.state == "PROGRESS":
+    elif result.state == "RUNNING":
         progress_ids = result.info.get("progress_ids", 0)
         content = {
             "task_id": task_id,

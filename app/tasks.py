@@ -70,17 +70,17 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         # update progress bar
         if data_type == "json":
             self.update_state(
-                state="PROGRESS",
+                state="RUNNING",
                 meta={"progress_ids": progress_ids, "progress_db_data": 0}
             )
         elif data_type == "fasta":
             self.update_state(
-                state="PROGRESS",
+                state="RUNNING",
                 meta={"progress_ids": progress_ids, "progress_fasta": 0}
             )
         else:
             self.update_state(
-                state="PROGRESS",
+                state="RUNNING",
                 meta={"progress_ids": progress_ids}
             )
 
@@ -99,7 +99,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         os.makedirs(os.path.dirname(ids_file_path), exist_ok=True)
         with gzip.open(ids_file_path, "wt", encoding="utf-8") as gz_file:
             gz_file.write("\n".join(ids))
-        self.update_state(state="PROGRESS", meta={"progress_ids": 100})
+        self.update_state(state="RUNNING", meta={"progress_ids": 100})
         logger.info(f"Data export finished for: {self.request.id}")
         return {"ids_file_path": ids_file_path}
 
@@ -110,7 +110,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         total_ids = len(ids)
         self.update_state(
-            state="PROGRESS",
+            state="RUNNING",
             meta={"progress_ids": 100, "progress_db_data": 0}
         )
 
@@ -125,7 +125,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 gz_file.write(json.dumps(batch_data, default=str))
                 progress_db_data = int((i + batch_size) / total_ids * 100)
                 self.update_state(
-                    state="PROGRESS",
+                    state="RUNNING",
                     meta={
                         "progress_ids": 100,
                         "progress_db_data": progress_db_data
@@ -140,7 +140,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         temp_ids_file = f"/srv/results/{self.request.id}.txt"
         fasta_file_path = f"/srv/results/{self.request.id}.fasta.gz"
         self.update_state(
-            state="PROGRESS",
+            state="RUNNING",
             meta={"progress_ids": 100, "progress_fasta": 0}
         )
 
@@ -148,7 +148,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             ids_file.write("\n".join(ids))
 
         self.update_state(
-            state="PROGRESS",
+            state="RUNNING",
             meta={"progress_ids": 100, "progress_fasta": 50}
         )
 
@@ -169,7 +169,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                     stderr=process.stderr
                 )
             self.update_state(
-                state="PROGRESS",
+                state="RUNNING",
                 meta={"progress_ids": 100, "progress_fasta": 100}
             )
         except sub.CalledProcessError as e:
