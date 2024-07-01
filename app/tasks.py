@@ -3,6 +3,7 @@ import json
 import os
 import requests
 import subprocess as sub
+import time
 
 from pydantic import BaseModel
 
@@ -18,6 +19,28 @@ class APIData(BaseModel):
     description: str
 
 
+def get_response_or_retry(url: str, max_retries: int = 3) -> requests.Response:
+    """
+    If the request fails (i.e., the status code is not 200), wait for a short
+    period before retrying. If all attempts fail, raise an exception.
+    """
+    attempts = 0
+    while attempts < max_retries:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response
+        else:
+            attempts += 1
+            if attempts < max_retries:
+                time.sleep(3)
+            else:
+                logger.error(
+                    f"Failed to fetch data from {url} "
+                    f"after {max_retries} attempts"
+                )
+                raise Exception("Failed to fetch data from Search Index")
+
+
 @celery_app.task(bind=True)
 def fetch_data_from_search_index(self, api_url: str, data_type: str):
     settings = get_settings()
@@ -28,43 +51,42 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
     ids_extracted = 0
 
     while True:
-        response = requests.get(api_url + f"&searchposition={search_position}")
-        if response.status_code == 200:
-            data = response.json()
-            if not hit_count:
-                hit_count = data.get("hitCount")
+        response = get_response_or_retry(
+            api_url + f"&searchposition={search_position}"
+        )
+        data = response.json()
+        if not hit_count:
+            hit_count = data.get("hitCount")
 
-            entries = data.get("entries", [])
-            if not entries:
-                break  # there is no more data to fetch
+        entries = data.get("entries", [])
+        if not entries:
+            break  # there is no more data to fetch
 
-            # extract ids
-            ids.extend(entry["id"] for entry in entries)
-            ids_extracted += len(entries)
-            progress_ids = min(round(ids_extracted * 100 / hit_count), 95)
+        # extract ids
+        ids.extend(entry["id"] for entry in entries)
+        ids_extracted += len(entries)
+        progress_ids = min(round(ids_extracted * 100 / hit_count), 95)
 
-            # update progress bar
-            if data_type == "json":
-                self.update_state(
-                    state="PROGRESS",
-                    meta={"progress_ids": progress_ids, "progress_db_data": 0}
-                )
-            elif data_type == "fasta":
-                self.update_state(
-                    state="PROGRESS",
-                    meta={"progress_ids": progress_ids, "progress_fasta": 0}
-                )
-            else:
-                self.update_state(
-                    state="PROGRESS",
-                    meta={"progress_ids": progress_ids}
-                )
-
-            search_position = data.get("searchPosition")  # next position
-            if not search_position:
-                break
+        # update progress bar
+        if data_type == "json":
+            self.update_state(
+                state="PROGRESS",
+                meta={"progress_ids": progress_ids, "progress_db_data": 0}
+            )
+        elif data_type == "fasta":
+            self.update_state(
+                state="PROGRESS",
+                meta={"progress_ids": progress_ids, "progress_fasta": 0}
+            )
         else:
-            raise Exception("Failed to fetch data")
+            self.update_state(
+                state="PROGRESS",
+                meta={"progress_ids": progress_ids}
+            )
+
+        search_position = data.get("searchPosition")  # next position
+        if not search_position:
+            break
 
     # check for duplicate IDs
     if len(ids) != len(set(ids)):
