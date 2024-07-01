@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  labels:
+    app: worker
+spec:
+  ports:
+  - port: {{ .Values.workerPort }}
+    targetPort: {{ .Values.workerPort }}
+    protocol: TCP
+  selector:
+    app: worker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: {{ .Values.workerReplicas }}
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - image: ghcr.io/rnacentral/rnacentral-export:{{ .Values.branch }}
+          name: worker
+          imagePullPolicy: Always
+          command: ["celery", "-A", "app.celery.celery_app", "worker", "--loglevel=info", "--logfile=/srv/logs/export.log"]
+          ports:
+          - containerPort: {{ .Values.workerPort }}
+          resources:
+            requests:
+              memory: {{ .Values.workerRequestsMemory }}
+              cpu: {{ .Values.workerRequestsCPU }}
+            limits:
+              memory: {{ .Values.workerLimitsMemory }}
+          volumeMounts:
+            - name: rnacentral-species-specific-ids
+              mountPath: /srv/fasta
+            - name: export-results
+              mountPath: /srv/results
+            - name: logs
+              mountPath: /srv/logs
+          envFrom:
+          - secretRef:
+              name: variables
+          - configMapRef:
+              name: {{ .Values.proxy }}
+      volumes:
+        - name: rnacentral-species-specific-ids
+          persistentVolumeClaim:
+            claimName: rnacentral-species-specific-ids
+        - name: export-results
+          persistentVolumeClaim:
+            claimName: export-results
+        - name: logs
+          persistentVolumeClaim:
+            claimName: logs

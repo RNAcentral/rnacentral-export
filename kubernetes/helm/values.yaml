@@ -1,0 +1,23 @@
+proxy: proxy-hx
+branch: main
+
+# Redis
+redisPort: 6379
+redisReplicas: 1
+redisRequestsMemory: "1000Mi"
+redisRequestsCPU: "1000m"
+redisLimitsMemory: "2000Mi"
+
+# FastAPI
+port: 8000
+replicas: 2
+requestsMemory: "1000Mi"
+requestsCPU: "1000m"
+limitsMemory: "2000Mi"
+
+# Worker (celery)
+workerPort: 8001
+workerReplicas: 3
+workerRequestsMemory: "4000Mi"
+workerRequestsCPU: "1000m"
+workerLimitsMemory: "8000Mi"
