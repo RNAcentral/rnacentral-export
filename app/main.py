@@ -1,6 +1,7 @@
 import os
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator, TypeAdapter
 from typing import Literal
@@ -9,17 +10,30 @@ from .logger import logger
 from .tasks import fetch_data_from_search_index
 
 
+app = FastAPI(docs_url="/")
+
+origins = [
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 class APIRequest(BaseModel):
-    api_url: str = Field(..., json_schema_extra={"example": "https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(TAXONOMY:9606)&size=500&sort=id&format=json"})
+    api_url: str = Field(..., json_schema_extra={"example": "https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(TAXONOMY:9606)&size=1000&sort=id&format=json"})
     data_type: Literal["fasta", "ids", "json"]
 
     @field_validator("api_url")
     def validate_api_url(cls, url):
         TypeAdapter(AnyHttpUrl).validate_python(url)
         return url
-
-
-app = FastAPI(docs_url="/")
 
 
 @app.post("/fetch-data/")
