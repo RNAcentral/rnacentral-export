@@ -40,11 +40,11 @@ def fetch_data_from_db(ids: List[str]) -> List[Dict[str, Any]]:
                     precomputed.c.rna_type,
                     precomputed.c.so_rna_type,
                     precomputed.c.databases,
-                    r2dt_results.c.secondary_structure,
+                    func.coalesce(r2dt_results.c.secondary_structure, "").label("secondary_structure"),
                     func.coalesce(rna.c.seq_short, rna.c.seq_long).label("sequence")
                 )
                 .join(rna, rna.c.upi == precomputed.c.upi)
-                .join(r2dt_results, r2dt_results.c.urs == precomputed.c.upi)
+                .join(r2dt_results, r2dt_results.c.urs == precomputed.c.upi, isouter=True)
                 .where(precomputed.c.id.in_(ids))
             )
             results = session.execute(stmt).fetchall()
