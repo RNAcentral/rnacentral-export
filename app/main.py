@@ -28,7 +28,7 @@ app.add_middleware(
 
 class APIRequest(BaseModel):
     api_url: str = Field(..., json_schema_extra={"example": "https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query=(TAXONOMY:9606)&size=1000&sort=id&format=json"})
-    data_type: Literal["fasta", "ids", "json"]
+    data_type: Literal["fasta", "json", "txt"]
 
     @field_validator("api_url")
     def validate_api_url(cls, url):
@@ -54,9 +54,9 @@ def download_fasta(task_id: str):
     return download_file(task_id, "fasta")
 
 
-@app.get("/download/{task_id}/ids")
-def download_ids(task_id: str):
-    return download_file(task_id, "ids")
+@app.get("/download/{task_id}/txt")
+def download_txt(task_id: str):
+    return download_file(task_id, "txt")
 
 
 @app.get("/download/{task_id}/json")

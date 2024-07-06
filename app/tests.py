@@ -35,17 +35,17 @@ def test_fetch_data_with_fasta(mock_fetch_data):
     }
 
 
-def test_fetch_data_with_ids(mock_fetch_data):
+def test_fetch_data_with_txt(mock_fetch_data):
     api = ("https://wwwdev.ebi.ac.uk/ebisearch/ws/rest/rnacentral?"
            "query=(TAXONOMY:559292)&size=1&sort=id&format=json")
     response = client.post(
         "/fetch-data/",
-        json={"api_url": api, "data_type": "ids"}
+        json={"api_url": api, "data_type": "txt"}
     )
     assert response.status_code == 200
     assert response.json() == {
         "task_id": "mock-task-id",
-        "data_type": "ids"
+        "data_type": "txt"
     }
 
 

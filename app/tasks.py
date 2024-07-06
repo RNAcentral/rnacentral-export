@@ -93,7 +93,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         ids = list(set(ids))
         logger.info(f"There are duplicate IDs at this URL: {api_url}")
 
-    if data_type == "ids":
+    if data_type == "txt":
         # save IDs to a compressed file
         ids_file_path = f"/srv/results/{self.request.id}.txt.gz"
         os.makedirs(os.path.dirname(ids_file_path), exist_ok=True)
