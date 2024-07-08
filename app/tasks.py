@@ -5,18 +5,10 @@ import requests
 import subprocess as sub
 import time
 
-from pydantic import BaseModel
-
 from .celery import celery_app
 from .config import get_settings
 from .database import fetch_data_from_db
 from .logger import logger
-
-
-class APIData(BaseModel):
-    id: str
-    source: str
-    description: str
 
 
 def get_response_or_retry(url: str, max_retries: int = 3) -> requests.Response:
