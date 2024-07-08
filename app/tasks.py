@@ -71,17 +71,25 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         if data_type == "json":
             self.update_state(
                 state="RUNNING",
-                meta={"progress_ids": progress_ids, "progress_db_data": 0}
+                meta={
+                    "hit_count": hit_count,
+                    "progress_ids": progress_ids,
+                    "progress_db_data": 0
+                }
             )
         elif data_type == "fasta":
             self.update_state(
                 state="RUNNING",
-                meta={"progress_ids": progress_ids, "progress_fasta": 0}
+                meta={
+                    "hit_count": hit_count,
+                    "progress_ids": progress_ids,
+                    "progress_fasta": 0
+                }
             )
         else:
             self.update_state(
                 state="RUNNING",
-                meta={"progress_ids": progress_ids}
+                meta={"hit_count": hit_count, "progress_ids": progress_ids}
             )
 
         search_position = data.get("searchPosition")  # next position
@@ -99,7 +107,10 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         os.makedirs(os.path.dirname(ids_file_path), exist_ok=True)
         with gzip.open(ids_file_path, "wt", encoding="utf-8") as gz_file:
             gz_file.write("\n".join(ids))
-        self.update_state(state="RUNNING", meta={"progress_ids": 100})
+        self.update_state(
+            state="RUNNING",
+            meta={"hit_count": hit_count, "progress_ids": 100}
+        )
         logger.info(f"Data export finished for: {self.request.id}")
         return {"ids_file_path": ids_file_path}
 
@@ -111,7 +122,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         total_ids = len(ids)
         self.update_state(
             state="RUNNING",
-            meta={"progress_ids": 100, "progress_db_data": 0}
+            meta={
+                "hit_count": hit_count,
+                "progress_ids": 100,
+                "progress_db_data": 0
+            }
         )
 
         with gzip.open(file_path, "wt", encoding="utf-8") as gz_file:
@@ -127,6 +142,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 self.update_state(
                     state="RUNNING",
                     meta={
+                        "hit_count": hit_count,
                         "progress_ids": 100,
                         "progress_db_data": progress_db_data
                     }
@@ -141,7 +157,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         fasta_file_path = f"/srv/results/{self.request.id}.fasta.gz"
         self.update_state(
             state="RUNNING",
-            meta={"progress_ids": 100, "progress_fasta": 0}
+            meta={
+                "hit_count": hit_count,
+                "progress_ids": 100,
+                "progress_fasta": 0
+            }
         )
 
         with open(temp_ids_file, "w") as ids_file:
@@ -149,7 +169,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
 
         self.update_state(
             state="RUNNING",
-            meta={"progress_ids": 100, "progress_fasta": 50}
+            meta={
+                "hit_count": hit_count,
+                "progress_ids": 100,
+                "progress_fasta": 50
+            }
         )
 
         cmd = "{esl_binary} -f {fasta} {id_list} | gzip > {output}".format(
@@ -170,7 +194,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 )
             self.update_state(
                 state="RUNNING",
-                meta={"progress_ids": 100, "progress_fasta": 100}
+                meta={
+                    "hit_count": hit_count,
+                    "progress_ids": 100,
+                    "progress_fasta": 100
+                }
             )
         except sub.CalledProcessError as e:
             logger.error(f"esl-sfetch failed: {e.stderr.decode('utf-8')}")
