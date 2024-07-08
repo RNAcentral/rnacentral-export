@@ -15,6 +15,8 @@ app = FastAPI(docs_url="/")
 origins = [
     "http://localhost",
     "http://127.0.0.1",
+    "https://test.rnacentral.org",
+    "https://rnacentral.org",
 ]
 
 app.add_middleware(
