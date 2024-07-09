@@ -1,3 +1,4 @@
+import datetime
 import gzip
 import json
 import os
@@ -122,14 +123,29 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         )
 
         with gzip.open(file_path, "wt", encoding="utf-8") as gz_file:
+            date_time = datetime.datetime.now().strftime("%d %B %Y %H:%M:%S")
+
+            # add some metadata
+            gz_file.write('{"job": "')
+            gz_file.write(self.request.id)
+            gz_file.write('", "rnacentral_version": "v24", ')
+            gz_file.write(
+                '"licenses": [{"name": "CC0", "path": '
+                '"https://creativecommons.org/share-your-work/public-domain'
+                '/cc0/", "title": "Creative Commons Zero license"}], '
+            )
+            gz_file.write(f'"download_date": "{date_time}", ')
+            gz_file.write('"results": [')
+
             first = True
             for i in range(0, total_ids, batch_size):
                 batch_ids = ids[i:i + batch_size]
                 batch_data = fetch_data_from_db(batch_ids)
-                if not first:
-                    gz_file.write(", ")  # add comma between JSON objects
-                first = False
-                gz_file.write(json.dumps(batch_data, default=str))
+                for entry in batch_data:
+                    if not first:
+                        gz_file.write(", ")  # add comma between JSON objects
+                    first = False
+                    gz_file.write(json.dumps(entry, default=str))
                 progress_db_data = int((i + batch_size) / total_ids * 100)
                 self.update_state(
                     state="RUNNING",
@@ -139,6 +155,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                         "progress_db_data": progress_db_data
                     }
                 )
+            gz_file.write("]}")
 
         logger.info(f"Data export finished for: {self.request.id}")
         return file_path
