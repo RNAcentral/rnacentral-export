@@ -2,7 +2,7 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator, TypeAdapter
 from typing import Literal
 
@@ -100,12 +100,7 @@ def download_file(task_id: str, data_type: str):
         file_path = f"/srv/results/{task_id}.{file_extension}"
         if os.path.exists(file_path):
             logger.info(f"Showing results for Task ID: {task_id}")
-            return FileResponse(
-                path=file_path,
-                filename=f"{task_id}.{file_extension}",
-                media_type="application/gzip",
-                headers={"Content-Disposition": f"attachment; filename={task_id}.{file_extension}"}
-            )
+            return stream_file(file_path, f"{task_id}.{file_extension}")
         else:
             logger.error(f"Results file could not be found: {task_id}")
             raise HTTPException(status_code=404, detail="File not found")
@@ -124,3 +119,16 @@ def download_file(task_id: str, data_type: str):
 
     else:
         raise HTTPException(status_code=202, detail="Task is still processing")
+
+
+def stream_file(file_path: str, filename: str):
+    def read_file():
+        with open(file_path, "rb") as file:
+            while chunk := file.read(16384):  # Read in 16KB chunks
+                yield chunk
+
+    return StreamingResponse(
+        read_file(),
+        media_type="application/gzip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
