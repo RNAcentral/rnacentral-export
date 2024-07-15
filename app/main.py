@@ -127,8 +127,13 @@ def stream_file(file_path: str, filename: str):
             while chunk := file.read(16384):  # Read in 16KB chunks
                 yield chunk
 
+    file_size = os.path.getsize(file_path)
+
     return StreamingResponse(
         read_file(),
         media_type="application/gzip",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Length": str(file_size)
+        }
     )
