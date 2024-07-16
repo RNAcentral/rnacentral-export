@@ -19,19 +19,26 @@ def get_response_or_retry(url: str, max_retries: int = 3) -> requests.Response:
     """
     attempts = 0
     while attempts < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response
-        else:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response
+            else:
+                logger.error(f"Failed to fetch data from {url} with status code {response.status_code}")
+                attempts += 1
+                if attempts < max_retries:
+                    time.sleep(5)
+                else:
+                    logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
+                    raise Exception("Failed to fetch data from Search Index")
+        except requests.RequestException as e:
+            logger.error(f"Exception occurred while fetching data from {url}: {e}")
             attempts += 1
             if attempts < max_retries:
-                time.sleep(3)
+                time.sleep(5)
             else:
-                logger.error(
-                    f"Failed to fetch data from {url} "
-                    f"after {max_retries} attempts"
-                )
-                raise Exception("Failed to fetch data from Search Index")
+                logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
+                raise
 
 
 @celery_app.task(bind=True)
