@@ -122,10 +122,10 @@ def download_file(task_id: str, data_type: str):
         raise HTTPException(status_code=202, detail="Task is still processing")
 
 
-def stream_file(file_path: str, filename: str):
+async def stream_file(file_path: str, filename: str):
     async def read_file():
         async with aiofiles.open(file_path, "rb") as file:
-            while chunk := file.read(16384):  # Read in 16KB chunks
+            while chunk := await file.read(16384):  # Read in 16KB chunks
                 yield chunk
 
     file_size = os.path.getsize(file_path)
