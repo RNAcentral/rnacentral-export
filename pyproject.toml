@@ -16,6 +16,7 @@ celery = "^5.4.0"
 redis = "^5.0.6"
 sqlalchemy = "^2.0.30"
 psycopg2-binary = "^2.9.9"
+aiofiles = "^24.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
