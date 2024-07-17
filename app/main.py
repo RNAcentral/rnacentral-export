@@ -1,3 +1,4 @@
+import aiofiles
 import os
 
 from fastapi import FastAPI, HTTPException
@@ -122,8 +123,8 @@ def download_file(task_id: str, data_type: str):
 
 
 def stream_file(file_path: str, filename: str):
-    def read_file():
-        with open(file_path, "rb") as file:
+    async def read_file():
+        async with aiofiles.open(file_path, "rb") as file:
             while chunk := file.read(16384):  # Read in 16KB chunks
                 yield chunk
 
