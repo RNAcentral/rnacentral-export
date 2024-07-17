@@ -54,21 +54,21 @@ def fetch_data(request: APIRequest):
 
 
 @app.get("/download/{task_id}/fasta")
-def download_fasta(task_id: str):
-    return download_file(task_id, "fasta")
+async def download_fasta(task_id: str):
+    return await download_file(task_id, "fasta")
 
 
 @app.get("/download/{task_id}/txt")
-def download_txt(task_id: str):
-    return download_file(task_id, "txt")
+async def download_txt(task_id: str):
+    return await download_file(task_id, "txt")
 
 
 @app.get("/download/{task_id}/json")
-def download_json(task_id: str):
-    return download_file(task_id, "json")
+async def download_json(task_id: str):
+    return await download_file(task_id, "json")
 
 
-def download_file(task_id: str, data_type: str):
+async def download_file(task_id: str, data_type: str):
     result = fetch_data_from_search_index.AsyncResult(task_id)
     if result.state == "PENDING":
         # a valid task_id will never be PENDING, as we are changing the initial
@@ -101,7 +101,7 @@ def download_file(task_id: str, data_type: str):
         file_path = f"/srv/results/{task_id}.{file_extension}"
         if os.path.exists(file_path):
             logger.info(f"Showing results for Task ID: {task_id}")
-            return stream_file(file_path, f"{task_id}.{file_extension}")
+            return await stream_file(file_path, f"{task_id}.{file_extension}")
         else:
             logger.error(f"Results file could not be found: {task_id}")
             raise HTTPException(status_code=404, detail="File not found")
@@ -125,7 +125,7 @@ def download_file(task_id: str, data_type: str):
 async def stream_file(file_path: str, filename: str):
     async def read_file():
         async with aiofiles.open(file_path, "rb") as file:
-            while chunk := await file.read(16384):  # Read in 16KB chunks
+            while chunk := await file.read(16384):  # Read in 16MB chunks
                 yield chunk
 
     file_size = os.path.getsize(file_path)
