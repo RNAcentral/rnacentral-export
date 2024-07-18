@@ -122,7 +122,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             meta={"query": query, "hit_count": hit_count, "progress_ids": 100}
         )
         logger.info(f"Data export finished for: {self.request.id}")
-        return {"ids_file_path": ids_file_path}
+        return {
+            "ids_file_path": ids_file_path,
+            "query": query,
+            "hit_count": hit_count
+        }
 
     elif data_type == "json":
         # fetch data from database in batches and write to a compressed file
@@ -177,7 +181,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             gz_file.write("]}")
 
         logger.info(f"Data export finished for: {self.request.id}")
-        return file_path
+        return {"file_path": file_path, "query": query, "hit_count": hit_count}
 
     if data_type == "fasta":
         # generate FASTA file using esl-sfetch
@@ -241,4 +245,8 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
 
         os.remove(temp_ids_file)
         logger.info(f"Data export finished for: {self.request.id}")
-        return {"fasta_file": fasta_file_path}
+        return {
+            "fasta_file": fasta_file_path,
+            "query": query,
+            "hit_count": hit_count
+        }
