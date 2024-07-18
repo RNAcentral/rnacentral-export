@@ -25,7 +25,7 @@ def test_fetch_data_with_fasta(mock_fetch_data):
     api = ("https://wwwdev.ebi.ac.uk/ebisearch/ws/rest/rnacentral?"
            "query=(TAXONOMY:559292)&size=1&sort=id&format=json")
     response = client.post(
-        "/fetch-data/",
+        "/submit/",
         json={"api_url": api, "data_type": "fasta"}
     )
     assert response.status_code == 200
@@ -39,7 +39,7 @@ def test_fetch_data_with_txt(mock_fetch_data):
     api = ("https://wwwdev.ebi.ac.uk/ebisearch/ws/rest/rnacentral?"
            "query=(TAXONOMY:559292)&size=1&sort=id&format=json")
     response = client.post(
-        "/fetch-data/",
+        "/submit/",
         json={"api_url": api, "data_type": "txt"}
     )
     assert response.status_code == 200
@@ -53,7 +53,7 @@ def test_fetch_data_with_json(mock_fetch_data):
     api = ("https://wwwdev.ebi.ac.uk/ebisearch/ws/rest/rnacentral?"
            "query=(TAXONOMY:559292)&size=1&sort=id&format=json")
     response = client.post(
-        "/fetch-data/",
+        "/submit/",
         json={"api_url": api, "data_type": "json"}
     )
     assert response.status_code == 200
@@ -67,7 +67,7 @@ def test_fetch_data_with_invalid_data_type(mock_fetch_data):
     api = ("https://wwwdev.ebi.ac.uk/ebisearch/ws/rest/rnacentral?"
            "query=(TAXONOMY:559292)&size=1&sort=id&format=json")
     response = client.post(
-        "/fetch-data/",
+        "/submit/",
         json={"api_url": api, "data_type": "invalid"}
     )
     assert response.status_code == 422
@@ -75,7 +75,7 @@ def test_fetch_data_with_invalid_data_type(mock_fetch_data):
 
 def test_fetch_data_with_empty_url(mock_fetch_data):
     response = client.post(
-        "/fetch-data/",
+        "/submit/",
         json={"api_url": "", "data_type": "json"}
     )
     assert response.status_code == 422
@@ -151,6 +151,7 @@ def test_download_file_processing(mocker):
 def test_download_file_progress(mocker):
     mock_result = Mock(state="RUNNING")
     mock_result.info = {
+        "query": "",
         "hit_count": 200,
         "progress_ids": 50,
         "progress_db_data": 0
@@ -165,6 +166,7 @@ def test_download_file_progress(mocker):
     assert response.json() == {
         "task_id": "mock-task-id",
         "state": "RUNNING",
+        "query": "",
         "hit_count": 200,
         "progress_ids": 50,
         "progress_db_data": 0
