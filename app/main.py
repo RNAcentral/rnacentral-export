@@ -39,8 +39,8 @@ class APIRequest(BaseModel):
         return url
 
 
-@app.post("/fetch-data/")
-def fetch_data(request: APIRequest):
+@app.post("/submit/")
+def submit_data(request: APIRequest):
     task = fetch_data_from_search_index.delay(
         request.api_url,
         request.data_type
@@ -52,43 +52,35 @@ def fetch_data(request: APIRequest):
     return {"task_id": task.id, "data_type": request.data_type}
 
 
-@app.get("/info/{task_id}")
+@app.get("/status/{task_id}")
 def get_task_info(task_id: str):
     result = fetch_data_from_search_index.AsyncResult(task_id)
     if result.state == "PENDING":
         raise HTTPException(status_code=404, detail="Task ID not found")
 
-    meta = result.info or {}
     if result.state == "SUCCESS":
-        result_meta = result.result or {}
-        meta.setdefault("query", result_meta.get("query"))
-        meta.setdefault("hit_count", result_meta.get("hit_count"))
+        meta = result.result or {}
     else:
-        meta.setdefault("query", result.info.get("query"))
-        meta.setdefault("hit_count", result.info.get("hit_count"))
+        meta = result.info or {}
 
-    return {
+    context = {
         "task_id": task_id,
         "state": result.state,
-        "meta": meta
+        "query": meta.get("query"),
+        "data_type": meta.get("data_type"),
+        "hit_count": meta.get("hit_count"),
+        "progress_ids": meta.get("progress_ids")
     }
 
+    if meta.get("data_type") == "json":
+        context["progress_db_data"] = meta.get("progress_db_data")
+    elif meta.get("data_type") == "fasta":
+        context["progress_fasta"] = meta.get("progress_fasta")
 
-@app.get("/download/{task_id}/fasta")
-def download_fasta(task_id: str):
-    return download_file(task_id, "fasta")
-
-
-@app.get("/download/{task_id}/txt")
-def download_txt(task_id: str):
-    return download_file(task_id, "txt")
+    return context
 
 
-@app.get("/download/{task_id}/json")
-def download_json(task_id: str):
-    return download_file(task_id, "json")
-
-
+@app.get("/download/{task_id}/{data_type}")
 def download_file(task_id: str, data_type: str):
     result = fetch_data_from_search_index.AsyncResult(task_id)
     if result.state == "PENDING":
