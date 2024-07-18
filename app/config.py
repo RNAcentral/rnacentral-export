@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     dev: bool = False
     esl_binary: str = "/srv/local/infernal-1.1.5/bin/esl-sfetch"
     fasta: str = "/srv/rnacentral-export/app/examples.fasta"
+    version: str = "v24"  # RNAcentral version number
 
     model_config = SettingsConfigDict(env_file=".env")
 
