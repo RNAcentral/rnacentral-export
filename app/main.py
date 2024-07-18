@@ -52,6 +52,28 @@ def fetch_data(request: APIRequest):
     return {"task_id": task.id, "data_type": request.data_type}
 
 
+@app.get("/info/{task_id}")
+def get_task_info(task_id: str):
+    result = fetch_data_from_search_index.AsyncResult(task_id)
+    if result.state == "PENDING":
+        raise HTTPException(status_code=404, detail="Task ID not found")
+
+    meta = result.info or {}
+    if result.state == "SUCCESS":
+        result_meta = result.result or {}
+        meta.setdefault("query", result_meta.get("query"))
+        meta.setdefault("hit_count", result_meta.get("hit_count"))
+    else:
+        meta.setdefault("query", result.info.get("query"))
+        meta.setdefault("hit_count", result.info.get("hit_count"))
+
+    return {
+        "task_id": task_id,
+        "state": result.state,
+        "meta": meta
+    }
+
+
 @app.get("/download/{task_id}/fasta")
 def download_fasta(task_id: str):
     return download_file(task_id, "fasta")
