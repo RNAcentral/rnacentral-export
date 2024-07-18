@@ -76,10 +76,12 @@ def download_file(task_id: str, data_type: str):
         raise HTTPException(status_code=404, detail="Task ID not found")
 
     elif result.state == "RUNNING":
+        query = result.info.get("query", "")
         hit_count = result.info.get("hit_count", 0)
         progress_ids = result.info.get("progress_ids", 0)
         content = {
             "task_id": task_id,
+            "query": query,
             "hit_count": hit_count,
             "state": result.state,
             "progress_ids": progress_ids,
