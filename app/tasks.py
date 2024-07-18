@@ -6,6 +6,8 @@ import requests
 import subprocess as sub
 import time
 
+from urllib.parse import urlparse, parse_qs
+
 from .celery import celery_app
 from .config import get_settings
 from .database import fetch_data_from_db
@@ -49,6 +51,8 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
     ids = []
     hit_count = None
     ids_extracted = 0
+    query_params = parse_qs(urlparse(api_url).query)  # extract query params
+    query = query_params.get("query", [None])[0]  # get query
 
     while True:
         response = get_response_or_retry(
@@ -72,6 +76,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             self.update_state(
                 state="RUNNING",
                 meta={
+                    "query": query,
                     "hit_count": hit_count,
                     "progress_ids": progress_ids,
                     "progress_db_data": 0
@@ -81,6 +86,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             self.update_state(
                 state="RUNNING",
                 meta={
+                    "query": query,
                     "hit_count": hit_count,
                     "progress_ids": progress_ids,
                     "progress_fasta": 0
@@ -89,7 +95,11 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         else:
             self.update_state(
                 state="RUNNING",
-                meta={"hit_count": hit_count, "progress_ids": progress_ids}
+                meta={
+                    "query": query,
+                    "hit_count": hit_count,
+                    "progress_ids": progress_ids
+                }
             )
 
         search_position = data.get("searchPosition")  # next position
@@ -109,7 +119,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             gz_file.write("\n".join(ids))
         self.update_state(
             state="RUNNING",
-            meta={"hit_count": hit_count, "progress_ids": 100}
+            meta={"query": query, "hit_count": hit_count, "progress_ids": 100}
         )
         logger.info(f"Data export finished for: {self.request.id}")
         return {"ids_file_path": ids_file_path}
@@ -123,6 +133,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         self.update_state(
             state="RUNNING",
             meta={
+                "query": query,
                 "hit_count": hit_count,
                 "progress_ids": 100,
                 "progress_db_data": 0
@@ -157,6 +168,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 self.update_state(
                     state="RUNNING",
                     meta={
+                        "query": query,
                         "hit_count": hit_count,
                         "progress_ids": 100,
                         "progress_db_data": progress_db_data
@@ -174,6 +186,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         self.update_state(
             state="RUNNING",
             meta={
+                "query": query,
                 "hit_count": hit_count,
                 "progress_ids": 100,
                 "progress_fasta": 0
@@ -186,6 +199,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         self.update_state(
             state="RUNNING",
             meta={
+                "query": query,
                 "hit_count": hit_count,
                 "progress_ids": 100,
                 "progress_fasta": 50
@@ -211,6 +225,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             self.update_state(
                 state="RUNNING",
                 meta={
+                    "query": query,
                     "hit_count": hit_count,
                     "progress_ids": 100,
                     "progress_fasta": 100
