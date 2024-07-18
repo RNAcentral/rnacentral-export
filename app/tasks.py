@@ -77,6 +77,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 state="RUNNING",
                 meta={
                     "query": query,
+                    "data_type": data_type,
                     "hit_count": hit_count,
                     "progress_ids": progress_ids,
                     "progress_db_data": 0
@@ -87,6 +88,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 state="RUNNING",
                 meta={
                     "query": query,
+                    "data_type": data_type,
                     "hit_count": hit_count,
                     "progress_ids": progress_ids,
                     "progress_fasta": 0
@@ -97,6 +99,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 state="RUNNING",
                 meta={
                     "query": query,
+                    "data_type": data_type,
                     "hit_count": hit_count,
                     "progress_ids": progress_ids
                 }
@@ -119,13 +122,20 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             gz_file.write("\n".join(ids))
         self.update_state(
             state="RUNNING",
-            meta={"query": query, "hit_count": hit_count, "progress_ids": 100}
+            meta={
+                "query": query,
+                "data_type": data_type,
+                "hit_count": hit_count,
+                "progress_ids": 100
+            }
         )
         logger.info(f"Data export finished for: {self.request.id}")
         return {
             "ids_file_path": ids_file_path,
             "query": query,
-            "hit_count": hit_count
+            "data_type": data_type,
+            "hit_count": hit_count,
+            "progress_ids": 100
         }
 
     elif data_type == "json":
@@ -138,6 +148,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             state="RUNNING",
             meta={
                 "query": query,
+                "data_type": data_type,
                 "hit_count": hit_count,
                 "progress_ids": 100,
                 "progress_db_data": 0
@@ -150,7 +161,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             # add some metadata
             gz_file.write('{"job": "')
             gz_file.write(self.request.id)
-            gz_file.write('", "rnacentral_version": "v24", ')
+            gz_file.write(f'", "rnacentral_version": "{settings.version}", ')
             gz_file.write(
                 '"licenses": [{"name": "CC0", "path": '
                 '"https://creativecommons.org/share-your-work/public-domain'
@@ -173,6 +184,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                     state="RUNNING",
                     meta={
                         "query": query,
+                        "data_type": data_type,
                         "hit_count": hit_count,
                         "progress_ids": 100,
                         "progress_db_data": progress_db_data
@@ -181,7 +193,14 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             gz_file.write("]}")
 
         logger.info(f"Data export finished for: {self.request.id}")
-        return {"file_path": file_path, "query": query, "hit_count": hit_count}
+        return {
+            "file_path": file_path,
+            "query": query,
+            "data_type": data_type,
+            "hit_count": hit_count,
+            "progress_ids": 100,
+            "progress_db_data": progress_db_data
+        }
 
     if data_type == "fasta":
         # generate FASTA file using esl-sfetch
@@ -191,6 +210,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             state="RUNNING",
             meta={
                 "query": query,
+                "data_type": data_type,
                 "hit_count": hit_count,
                 "progress_ids": 100,
                 "progress_fasta": 0
@@ -204,6 +224,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
             state="RUNNING",
             meta={
                 "query": query,
+                "data_type": data_type,
                 "hit_count": hit_count,
                 "progress_ids": 100,
                 "progress_fasta": 50
@@ -230,6 +251,7 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
                 state="RUNNING",
                 meta={
                     "query": query,
+                    "data_type": data_type,
                     "hit_count": hit_count,
                     "progress_ids": 100,
                     "progress_fasta": 100
@@ -248,5 +270,8 @@ def fetch_data_from_search_index(self, api_url: str, data_type: str):
         return {
             "fasta_file": fasta_file_path,
             "query": query,
-            "hit_count": hit_count
+            "data_type": data_type,
+            "hit_count": hit_count,
+            "progress_ids": 100,
+            "progress_fasta": 100
         }
