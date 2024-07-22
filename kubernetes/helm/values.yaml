@@ -4,20 +4,20 @@ branch: main
 # Redis
 redisPort: 6379
 redisReplicas: 1
-redisRequestsMemory: "1000Mi"
+redisRequestsMemory: "2000Mi"
 redisRequestsCPU: "1000m"
 redisLimitsMemory: "2000Mi"
 
 # FastAPI
 port: 8000
 replicas: 2
-requestsMemory: "1000Mi"
+requestsMemory: "2000Mi"
 requestsCPU: "1000m"
 limitsMemory: "2000Mi"
 
 # Worker (celery)
 workerPort: 8001
-workerReplicas: 3
-workerRequestsMemory: "4000Mi"
+workerReplicas: 4
+workerRequestsMemory: "6000Mi"
 workerRequestsCPU: "1000m"
-workerLimitsMemory: "8000Mi"
+workerLimitsMemory: "6000Mi"
