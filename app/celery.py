@@ -1,4 +1,6 @@
 from celery import Celery
+from datetime import timedelta
+
 from .config import get_settings
 
 
@@ -18,4 +20,6 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     broker_connection_retry_on_startup=True,
+    result_expires=timedelta(days=7),  # keep results for 7 days
+    result_persistent=True,
 )
