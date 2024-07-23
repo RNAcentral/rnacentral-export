@@ -11,9 +11,9 @@ services:
       context: .
       args:
         DEV: ${DEV}
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - .:/app
+      - .:/srv/rnacentral-export
       - results:/srv/results
       - logs:/srv/logs
     ports:
@@ -28,7 +28,7 @@ services:
         DEV: ${DEV}
     command: celery -A app.celery.celery_app worker --loglevel=info --logfile=/srv/logs/export.log
     volumes:
-      - .:/app
+      - .:/srv/rnacentral-export
       - results:/srv/results
       - logs:/srv/logs
     depends_on:
