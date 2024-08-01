@@ -1,0 +1,21 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: file-cleanup
+spec:
+  schedule: "0 0 * * *"  # Run daily at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cleanup
+            image: rnacentral/cleanup:latest
+            volumeMounts:
+            - name: export-results
+              mountPath: /srv/results
+          volumes:
+          - name: export-results
+            persistentVolumeClaim:
+              claimName: export-results
+          restartPolicy: OnFailure
