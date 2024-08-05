@@ -4,6 +4,8 @@ metadata:
   name: file-cleanup
 spec:
   schedule: "0 0 * * *"  # Run daily at midnight
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
   jobTemplate:
     spec:
       template:
