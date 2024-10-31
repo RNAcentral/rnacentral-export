@@ -5,6 +5,7 @@ metadata:
     pvc: rnacentral-species-specific-ids
   name: rnacentral-species-specific-ids
 spec:
+  storageClassName: standard-nfs-production
   accessModes:
   - ReadWriteMany
   resources:

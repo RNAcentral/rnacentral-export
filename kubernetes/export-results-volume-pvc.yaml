@@ -5,6 +5,7 @@ metadata:
     pvc: export-results
   name: export-results
 spec:
+  storageClassName: standard-nfs-production
   accessModes:
   - ReadWriteMany
   resources:
