@@ -1,0 +1,9 @@
+#-------------------------------------------------------------------------------
+#
+# Commands to build and push:
+#
+# docker buildx create --use
+# docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/rnacentral/redis:7.4.1-alpine -f Dockerfile-redis --push .
+#
+#-------------------------------------------------------------------------------
+FROM redis:7.4.1-alpine
