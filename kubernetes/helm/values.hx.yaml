@@ -1,0 +1,8 @@
+proxy: proxy-hx
+
+# FastAPI
+replicas: 1
+
+# Worker (celery)
+workerReplicas: 2
+
