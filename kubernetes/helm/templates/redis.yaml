@@ -26,8 +26,6 @@ spec:
       labels:
         app: redis
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       containers:
         - image: ghcr.io/rnacentral/redis:7.4.1-alpine
           name: redis
